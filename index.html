@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="点一下开始检测，撒彩带并显示「没坏」。">
+    <title>触摸屏检测</title>
+    <style>
+:root {
+  color-scheme: light;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  color: #22203a;
+  background: #f4f3fc;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 15% 92%, #dedcff 0%, transparent 49%),
+    radial-gradient(ellipse at 86% 8%, #eee0fb 0%, transparent 45%),
+    radial-gradient(circle, #ccc6e6 1px, transparent 1.2px) 50% 50% / 20px 20px,
+    #f7f6fe;
+}
+
+main {
+  display: grid;
+  place-items: center;
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+  padding: 24px;
+}
+
+.panel {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(26px, 5vw, 36px);
+  inline-size: min(100%, 520px);
+  min-block-size: clamp(300px, 58vw, 364px);
+  padding: 48px 20px;
+  border: 1px solid #fff;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 50% 115%, #e7e2ff, transparent 62%),
+    linear-gradient(160deg, #fff 18%, #f7f5ff 84%);
+  box-shadow: 0 24px 72px -24px #55469a56, 0 4px 12px #45377710;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(30px, 7.5vw, 52px);
+  line-height: 1.2;
+  font-weight: 760;
+  letter-spacing: -0.045em;
+}
+
+h1.passed {
+  color: #4a31d3;
+}
+
+button {
+  display: grid;
+  place-items: center;
+  min-block-size: 56px;
+  min-inline-size: 156px;
+  padding: 14px 26px;
+  border: 1px solid #5338d5;
+  border-radius: 16px;
+  background: linear-gradient(165deg, #6147ef, #4b2ed7);
+  box-shadow: 0 8px 20px #4d34d547, inset 0 1px #ffffff39;
+  color: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.4;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+@media (hover: hover) {
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px #4d34d55c, inset 0 1px #ffffff39;
+  }
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:focus-visible {
+  outline: 3px solid #5b3ce7;
+  outline-offset: 5px;
+}
+
+#confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ribbon {
+  position: absolute;
+  inset-block-start: -20px;
+  inset-inline-start: var(--left);
+  inline-size: var(--width);
+  block-size: var(--length);
+  border-radius: 2px;
+  background: var(--color);
+  opacity: 0;
+  animation: fall var(--duration) var(--delay) linear forwards;
+}
+
+@keyframes fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(var(--angle));
+  }
+
+  45% {
+    transform: translate3d(var(--sway), 42vh, 0) rotate(var(--turn));
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), calc(100vh + 30px), 0) rotate(var(--spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+
+  button:hover, button:active {
+    transform: none;
+  }
+
+  .ribbon {
+    display: none;
+  }
+}
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="panel" aria-labelledby="title">
+        <h1 id="title" aria-live="polite" aria-atomic="true">触摸屏检测</h1>
+        <button id="check" type="button">开始检测</button>
+      </section>
+    </main>
+    <div id="confetti" aria-hidden="true"></div>
+    <script>
+"use strict";
+
+const title = document.querySelector("#title");
+const checkButton = document.querySelector("#check");
+const confetti = document.querySelector("#confetti");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const colors = ["#6949ee", "#ed5ea2", "#ffc245", "#1dbd9a", "#428cec", "#fe765d"];
+
+checkButton.addEventListener("click", () => {
+  title.textContent = "没坏";
+  title.classList.add("passed");
+  confetti.replaceChildren();
+
+  if (reducedMotion.matches) return;
+
+  const ribbons = document.createDocumentFragment();
+  const count = Math.max(36, Math.min(80, Math.round(window.innerWidth / 14)));
+
+  for (let index = 0; index < count; index++) {
+    const ribbon = document.createElement("span");
+    const sway = Math.random() * 110 - 55;
+    const turn = Math.random() * 360 - 180;
+
+    ribbon.className = "ribbon";
+    ribbon.style.setProperty("--left", `${(index + Math.random()) / count * 100}%`);
+    ribbon.style.setProperty("--width", `${5 + Math.random() * 6}px`);
+    ribbon.style.setProperty("--length", `${8 + Math.random() * 12}px`);
+    ribbon.style.setProperty("--color", colors[index % colors.length]);
+    ribbon.style.setProperty("--duration", `${1750 + Math.random() * 1450}ms`);
+    ribbon.style.setProperty("--delay", `${Math.random() * 350}ms`);
+    ribbon.style.setProperty("--sway", `${sway}px`);
+    ribbon.style.setProperty("--drift", `${-sway * 1.7}px`);
+    ribbon.style.setProperty("--angle", `${Math.random() * 360}deg`);
+    ribbon.style.setProperty("--turn", `${turn}deg`);
+    ribbon.style.setProperty("--spin", `${turn * 3}deg`);
+    ribbon.addEventListener("animationend", () => ribbon.remove(), { once: true });
+    ribbons.append(ribbon);
+  }
+
+  confetti.append(ribbons);
+});
+    </script>
+  </body>
+</html>
